@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -9,6 +10,7 @@
         /* Configuración de fuente y fondo */
         :root {
             --primary-color: #4f46e5; /* Indigo */
+            --primary-dark-color: #4338ca; /* Indigo Oscuro */
             --bg-color: #f0f4f9; /* Azul grisáceo muy claro */
             --surface-color: #ffffff;
             --shadow-color: rgba(69, 44, 114, 0.1); /* Sombra púrpura suave */
@@ -90,7 +92,6 @@
             box-shadow: 0 5px 15px -3px rgba(16, 185, 129, 0.5); /* Sombra verde */
         }
         
-
         /* Animación para las filas de resultados (Ripple/Hover Effect) */
         .result-item {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -111,6 +112,44 @@
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        /* --- ANIMACIONES EN LOOP (ADAPTADAS A ÍNDIGO) --- */
+
+        /* 1. Pulsación suave del contenedor principal de la Negra (1/4) */
+        @keyframes soft-pulse {
+            0%, 100% {
+                /* Sombra base con tamaño normal */
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06), 0 0 0 0px var(--primary-color);
+            }
+            50% {
+                /* Sombra más amplia y sutil anillo índigo (4f46e5 con 0.15 opacidad) */
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1), 0 0 0 4px rgba(79, 70, 229, 0.15); 
+            }
+        }
+        
+        /* 2. Latido/Respiración del valor numérico (MS) */
+        @keyframes soft-beat {
+            0%, 100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.85; /* Ligera atenuación */
+                transform: scale(1.02); /* Ligero aumento de tamaño */
+            }
+        }
+
+        /* Clase para aplicar la animación de Pulsación al resultado principal */
+        .highlighted-result.animated {
+            animation: soft-pulse 2s ease-in-out infinite; /* 2 segundos de duración */
+        }
+        
+        /* Clase para aplicar la animación de Latido al número de MS */
+        .ms-value.animated {
+            display: inline-block; /* Necesario para que scale funcione */
+            animation: soft-beat 1s ease-in-out infinite; /* 1 segundo de duración (más rítmico) */
+        }
+
     </style>
     <script>
         tailwind.config = {
@@ -133,19 +172,15 @@
         <header class="mb-8 border-b pb-5 flex justify-between items-start">
             <div>
                 <h1 class="text-3xl font-extrabold text-gray-900 mb-1 leading-tight">
-                   BPM to MS
+                    🎧 BPM to MS 🚀
                 </h1>
-                <!-- MODIFICACIÓN: Se reduce el tamaño de fuente a text-sm en móvil para mejor flujo de texto -->
                 <p class="text-sm sm:text-base text-gray-500 font-medium">Una herramienta para productores, desarrollada por ItsJQz7 Studios, calcula rápidamente a cuantos Milisegundos equivale cada figura ritmica de un BPM</p>
             </div>
             
             <!-- Contenedor de Botones (Modificado para usar grid/columna) -->
-            <!-- En móvil (por defecto): columna vertical con espacio (space-y-2). -->
-            <!-- En pantallas más grandes (sm:): Los dos primeros botones se ponen en grid-cols-2. -->
             <div class="flex flex-col space-y-2 ml-4 w-full max-w-[200px] sm:max-w-none">
                 
                 <!-- Fila Superior: Tienda Online & Instagram (Grid en Desktop, Columnas en Mobile) -->
-                <!-- Usamos grid-cols-2 y gap-2 para que ocupen el 50% cada uno en pantallas mayores a 640px -->
                 <div class="grid grid-cols-2 gap-2">
                     
                     <!-- Botón Gumroad (Tienda Online) -->
@@ -202,7 +237,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary-indigo" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                Introduce el Tempo (BPM)
+                Introduce el Tempo (BPM) 🎶
             </label>
             <input
                 type="number"
@@ -212,7 +247,6 @@
                        transition duration-200 hover:scale-[1.005] shadow-md"
                 placeholder="Ej: 128"
                 min="1"
-                value="111"
                 oninput="calculateMs(this.value)"
             >
         </div>
@@ -220,7 +254,7 @@
         <!-- Área de Resultados MS -->
         <div>
             <h2 class="text-xl font-bold text-gray-800 mb-5 pb-2 border-b-2 border-primary-indigo-dark border-opacity-30">
-                Duraciones de Nota en Milisegundos (MS)
+                Duraciones de Nota en Milisegundos (MS) ⏱️
             </h2>
             <div id="results" class="space-y-3">
                 <!-- Los resultados se inyectarán aquí por JavaScript -->
@@ -234,9 +268,21 @@
 
     <script>
         /**
+         * Muestra el mensaje inicial de bienvenida y guía al usuario.
+         */
+        function showInitialPrompt() {
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = `
+                <div class="p-6 text-center bg-indigo-50 rounded-xl border-2 border-primary-indigo border-dashed text-gray-700 results-fade-in">
+                    <h3 class="text-xl font-bold mb-2">¡Comencemos a calcular! 🎧</h3>
+                    <p class="font-medium">Introduce un valor de **BPM** en el campo de arriba para ver las duraciones de las notas musicales en milisegundos.</p>
+                </div>
+            `;
+        }
+
+        /**
          * Realiza la conversión de BPM (Beats Per Minute) a la duración en milisegundos (MS)
          * para varias figuras musicales comunes.
-         * Se utiliza Math.round() para coincidir con la precisión de la web de referencia (BPM to MS Converter/Calculator).
          * @param {string} bpmString - El valor de BPM introducido por el usuario.
          */
         function calculateMs(bpmString) {
@@ -245,22 +291,24 @@
             const errorElement = document.getElementById('error-message');
             const bpmInput = document.getElementById('bpm-input');
 
-            // 1. Manejo de errores y entrada no válida
+            // 1. Manejo de entrada vacía (mostrar mensaje inicial)
+            if (bpmString.trim() === "") {
+                showInitialPrompt();
+                errorElement.classList.add('hidden');
+                bpmInput.classList.remove('border-red-500', 'focus:ring-red-500');
+                bpmInput.classList.add('border-primary-indigo', 'focus:ring-primary-indigo-dark');
+                return;
+            }
+
+            // 2. Manejo de errores y entrada no válida
             const isInvalid = isNaN(bpm) || bpm <= 0;
 
             if (isInvalid) {
                 resultsContainer.innerHTML = '';
-                if (bpmString.trim() !== "") {
-                    errorElement.classList.remove('hidden');
-                    // Cambiar borde a rojo para feedback visual
-                    bpmInput.classList.remove('border-primary-indigo', 'focus:ring-primary-indigo-dark');
-                    bpmInput.classList.add('border-red-500', 'focus:ring-red-500');
-                } else {
-                    errorElement.classList.add('hidden');
-                    // Borde por defecto si el campo está vacío
-                    bpmInput.classList.remove('border-red-500', 'focus:ring-red-500');
-                    bpmInput.classList.add('border-primary-indigo', 'focus:ring-primary-indigo-dark');
-                }
+                errorElement.classList.remove('hidden');
+                // Cambiar borde a rojo para feedback visual
+                bpmInput.classList.remove('border-primary-indigo', 'focus:ring-primary-indigo-dark');
+                bpmInput.classList.add('border-red-500', 'focus:ring-red-500');
                 return;
             }
 
@@ -270,70 +318,50 @@
             bpmInput.classList.add('border-primary-indigo', 'focus:ring-primary-indigo-dark');
 
 
-            // 2. Cálculo de la duración de una negra (Quarter Note) en MS
-            // Fórmula: (60 segundos / BPM) * 1000 milisegundos/segundo
+            // 3. Cálculo de la duración de una negra (Quarter Note) en MS
             const beatDurationMs = (60 / bpm) * 1000;
 
-            // 3. Definición de las subdivisiones y sus factores. 
-            // Se han ajustado los nombres y se han añadido subdivisiones menores para coincidir con la captura.
+            // 4. Definición y reordenamiento de las subdivisiones
             const subdivisions = [
-                // Notas enteras y fracciones comunes de la web de referencia
                 { name: "Redonda (1 Note / 4 Tiempos)", factor: 4.0 },
                 { name: "Blanca (1/2 / 2 Tiempos)", factor: 2.0 },
                 { name: "Negra (1/4 / Beat)", factor: 1.0, isPrimary: true }, // El beat principal
-                // Subdivisión Corchea y Semicorchea
                 { name: "Corchea (1/8)", factor: 0.5 },
                 { name: "Semicorchea (1/16)", factor: 0.25 },
-                // Subdivisión rápida (32s, 64s, 128s)
-                { name: "Fusa (1/32)", factor: 0.125 }, // Nota: La web de referencia llama 1/8 a nuestra Fusa (1/8)
+                { name: "Fusa (1/32)", factor: 0.125 }, 
                 { name: "Semifusa (1/64)", factor: 0.0625 },
                 { name: "1/128", factor: 0.03125 },
-
-                // Notas con puntillo (duración * 1.5)
-                { name: "Blanca con puntillo", factor: 3.0, isDotted: true },
-                { name: "Negra con puntillo", factor: 1.5, isDotted: true },
-                { name: "Corchea con puntillo", factor: 0.75, isDotted: true },
-                // Notas de Tresillo (Triplet)
-                { name: "Negra de tresillo", factor: 2 / 3, isTriplet: true },
-                { name: "Corchea de tresillo", factor: 1 / 3, isTriplet: true },
-                { name: "Semicorchea de tresillo", factor: 1 / 6, isTriplet: true },
             ];
             
-            // Filtramos las notas que están presentes en la captura de la web externa para asegurar el orden.
-            const filteredSubdivisions = subdivisions.filter(sub => {
-                const name = sub.name;
-                return name.includes("Redonda") || name.includes("Blanca (1/2") || name.includes("Negra (1/4") || name.includes("Corchea (1/8)") || name.includes("Semicorchea (1/16)") || name.includes("Fusa (1/32)") || name.includes("Semifusa (1/64)") || name.includes("1/128") || sub.isPrimary;
-            });
-            
-            // Reordenamos para priorizar la estructura de la web externa
+            // Reordenar (usando solo las subdivisiones del objeto principal para asegurar el orden)
             const finalSubdivisions = [
-                // Fila 1
-                filteredSubdivisions.find(s => s.factor === 4.0), // Redonda (1 Note)
-                filteredSubdivisions.find(s => s.factor === 2.0), // Blanca (1/2)
-                filteredSubdivisions.find(s => s.factor === 1.0), // Negra (1/4)
-                // Fila 2
-                filteredSubdivisions.find(s => s.factor === 0.5), // Corchea (1/8)
-                filteredSubdivisions.find(s => s.factor === 0.25), // Semicorchea (1/16)
-                filteredSubdivisions.find(s => s.factor === 0.125), // Fusa (1/32)
-                // Fila 3
-                filteredSubdivisions.find(s => s.factor === 0.0625), // Semifusa (1/64)
-                filteredSubdivisions.find(s => s.factor === 0.03125), // 1/128
-            ].filter(Boolean); // Eliminamos nulos si no se encuentran
+                subdivisions.find(s => s.factor === 4.0),
+                subdivisions.find(s => s.factor === 2.0),
+                subdivisions.find(s => s.factor === 1.0),
+                subdivisions.find(s => s.factor === 0.5),
+                subdivisions.find(s => s.factor === 0.25),
+                subdivisions.find(s => s.factor === 0.125),
+                subdivisions.find(s => s.factor === 0.0625),
+                subdivisions.find(s => s.factor === 0.03125),
+            ].filter(Boolean);
 
             let resultsHtml = '';
             
             finalSubdivisions.forEach(sub => {
                 const ms = beatDurationMs * sub.factor;
                 
-                // Uso de Math.round() para redondear a número entero
+                // Redondeamos a número entero
                 const formattedMs = Math.round(ms).toString();
 
                 // Clase especial para resaltar el beat principal (Negra)
                 const stylingClass = sub.isPrimary
-                    ? 'bg-primary-indigo text-white font-extrabold shadow-lg'
+                    ? 'bg-primary-indigo text-white font-extrabold highlighted-result shadow-lg'
                     : 'bg-white text-gray-700 result-item';
                 
-                // Ajustar el nombre de la figura para que coincida exactamente con las etiquetas de la web externa
+                // Aplicamos las clases de animación
+                const animationClass = sub.isPrimary ? 'animated' : '';
+                
+                // Ajustar el nombre de la figura para que coincida con las etiquetas
                 let displayName = sub.name;
                 if (sub.factor === 4.0) displayName = "1 Note / Redonda";
                 else if (sub.factor === 2.0) displayName = "1/2 / Blanca";
@@ -344,28 +372,27 @@
                 else if (sub.factor === 0.0625) displayName = "1/64 / Semifusa";
                 else if (sub.factor === 0.03125) displayName = "1/128";
 
+                // El texto pequeño "ms" usa color claro para el resaltado principal
+                const msTextColor = sub.isPrimary ? 'text-indigo-200' : 'text-primary-indigo';
 
-                // Usamos clases responsivas para asegurar que el texto se vea bien en móvil
                 resultsHtml += `
-                    <div class="flex justify-between items-center py-4 px-4 rounded-xl border-gray-200 ${stylingClass} cursor-default results-fade-in">
+                    <div class="flex justify-between items-center py-4 px-4 rounded-xl border-gray-200 ${stylingClass} ${animationClass} cursor-default results-fade-in">
                         <span class="text-base font-medium min-w-[50%] sm:min-w-0">${displayName}</span>
-                        <span class="text-2xl md:text-3xl font-mono">
-                            ${formattedMs} <span class="text-sm font-light ${sub.isPrimary ? 'text-indigo-200' : 'text-primary-indigo'}">ms</span>
+                        <span class="text-2xl md:text-3xl font-mono ms-value ${animationClass}">
+                            ${formattedMs} <span class="text-sm font-light ${msTextColor}">ms</span>
                         </span>
                     </div>
                 `;
             });
 
-            // 4. Inyectar los resultados en el contenedor
+            // 5. Inyectar los resultados en el contenedor
             resultsContainer.innerHTML = resultsHtml;
         }
 
-        // Ejecutar la función al cargar la página con el valor inicial (111 BPM)
+        // Ejecutar la función para mostrar el mensaje inicial al cargar la página
         window.onload = function() {
-            const initialBPM = document.getElementById('bpm-input').value;
-            calculateMs(initialBPM);
+            showInitialPrompt();
         };
     </script>
 </body>
-
 </html>
